@@ -1,0 +1,12 @@
+# TLS and basic authentication configuration example.
+#
+
+# Certificado e chave privada para habilitar o SSL no lado servidor.
+tls_server_config:
+  cert_file: tls/rbb.prometheus2.cert
+  key_file: tls/rbb.prometheus2.key
+
+# CA certificate for client certificate authentication to the server.
+# Requer que o Prometheus cliente apresente um certificado que será validado a partir do certificado da CA.
+  client_auth_type: "RequireAndVerifyClientCert"
+  client_ca_file: tls/rbb.ca.cert  

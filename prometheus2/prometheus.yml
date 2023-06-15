@@ -1,0 +1,37 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Rule files specifies a list of globs. Rules and alerts are read from
+# all matching files.
+rule_files:
+  - /etc/prometheus/rules.yml
+
+scrape_configs:
+  - job_name: prometheus2
+    scrape_interval: 10s
+    static_configs:
+    - targets: [localhost:9090]
+    
+    # A comunicação com o Prometheus 2 é criptografada, então mesmo aqui para as métricas do próprio Prometheus é preciso de certificado
+    scheme: https
+    tls_config:
+      ca_file: tls/rbb.ca.cert
+      cert_file: tls/rbb.prometheus2.cert
+      key_file: tls/rbb.prometheus2.key
+
+  - job_name: federate
+    scrape_interval: 15s
+
+    honor_labels: true
+    metrics_path: '/federate'
+
+    params:
+      'match[]':
+        - '{job="prometheus3"}'
+        - '{__name__=~"job:.*"}'
+
+    static_configs:
+      - targets:
+        - 'prometheus3.rbb.gov.br:9090'
+

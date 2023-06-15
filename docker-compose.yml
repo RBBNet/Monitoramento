@@ -1,0 +1,57 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3.5'
+
+networks:
+  rbb:
+    name: rbb
+
+services:
+
+  # Prometheus federado de nível 1 (topo)
+  # Este Prometheus irá coletar métricas (cliente) do Prometheus 2 em um canal SSL e habilitar autenticação básica para o servidor (interface web)
+  prometheus1.rbb.gov.br:
+    image: prom/prometheus
+    container_name: prometheus1.rbb.gov.br
+    user: root
+    command: --web.config.file=/etc/prometheus/web-config.yml --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus1:/etc/prometheus
+    ports:
+      - 9091:9090 #interface web
+    networks:
+      - rbb
+
+  # Prometheus federado de nível 2
+  # Este Prometheus irá coletar métricas (cliente) do Prometheus 3 sem SSL e fornecer métricas (server)
+  # para o Prometheus 1 com SSL.
+  prometheus2.rbb.gov.br:
+    image: prom/prometheus
+    container_name: prometheus2.rbb.gov.br
+    user: root
+    # O arquivo web-config.yml contém configurações para habilitar o SSL qdo o Prometheus atua como servidor
+    command: --web.config.file=/etc/prometheus/web-config.yml --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus2:/etc/prometheus
+    ports:
+      - 9092:9090 #interface web, aqui seria necessário emitir um certificado para o browser para acessá-la.
+    networks:
+      - rbb
+
+  # Prometheus federado de nível 3
+  # Este Prometheus irá fornecer métricas para o Prometheus 2 sem SSL.
+  prometheus3.rbb.gov.br:
+    image: prom/prometheus
+    container_name: prometheus3.rbb.gov.br
+    user: root
+    command: --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus3:/etc/prometheus
+    ports:
+      - 9093:9090 #interface web
+    networks:
+      - rbb
+

@@ -1,0 +1,39 @@
+groups:
+- name: 'Hyperledger Fabric'
+  rules:
+
+  - alert: InstanceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+      service_status: inactive
+      component: node
+    annotations:
+      summary: "Instance [{{$labels.instance}}] down"
+      description: "[{{$labels.instance}}] of job [{{$labels.job}}] has been down for more than 1 minute."
+
+  - alert: LedgerBlockchainHeightDivergence
+    expr: max(ledger_blockchain_height)-min(ledger_blockchain_height) > 0
+    for: 1m
+    labels:
+      severity: high
+      service_status: active
+      component: ledger
+    annotations:
+      summary: Divergência na altura dos blocos
+
+- name: 'MG Flor'
+  rules:
+
+  - alert: InactiveConsensusNode
+    expr: max(consensus_etcdraft_cluster_size{channel="mgflor"}) > max(consensus_etcdraft_active_nodes{channel="mgflor"})
+    for: 2m
+    labels:
+      severity: high
+      service_status: inactive
+      component: orderer
+    annotations:
+      summary: "Há nós inativos no serviço de consenso do canal [mgflor]."
+      description: "Foi detectado um ou mais nós inativos no serviço de consenso do canal [mgflor] por mais de 2 minutos."
+
